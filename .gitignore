@@ -1,0 +1,61 @@
+# Python virtual environment
+myvenv/
+venv/
+env/
+ENV/
+.venv/
+
+# Simulation outputs
+simulation_outputs/
+
+# Next.js build artifacts and dependencies
+Eunomia_Next_App/node_modules/
+Eunomia_Next_App/.next/
+Eunomia_Next_App/out/
+Eunomia_Next_App/build/
+Eunomia_Next_App/.vercel/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Environment variables
+.env
+.env.local
+.env*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+*.log.*
+
+# Documentation files (irrelevant docs) - keep main README
+*.md
+!README.md
+!Eunomia_Next_App/README.md
+
+# Test files
+test-*.js
+test_*.py
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
