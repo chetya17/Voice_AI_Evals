@@ -8,8 +8,12 @@ ENV/
 # Simulation outputs
 simulation_outputs/
 
-# Next.js app folder (entire folder)
-Eunomia_Next_App/
+# Next.js build artifacts and dependencies
+Eunomia_Next_App/node_modules/
+Eunomia_Next_App/.next/
+Eunomia_Next_App/out/
+Eunomia_Next_App/build/
+Eunomia_Next_App/.vercel/
 
 # Python cache
 __pycache__/
@@ -41,11 +45,13 @@ desktop.ini
 *.log.*
 
 # Documentation files (irrelevant docs) - keep main README
-CHANGES_SUMMARY.md
-LLM_JUDGE_README.md
-PARALLEL_SIMULATIONS.md
-QUICK_START.md
-SETUP_COMPLETE.md
+*.md
+!README.md
+!Eunomia_Next_App/README.md
+
+# Test files
+test-*.js
+test_*.py
 
 # Distribution / packaging
 dist/

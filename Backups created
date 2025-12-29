@@ -1,0 +1,260 @@
+warning: in the working copy of 'app.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'simulation.py', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/app.py b/app.py[m
+[1mindex 228a683..c784feb 100644[m
+[1m--- a/app.py[m
+[1m+++ b/app.py[m
+[36m@@ -278,9 +278,51 @@[m [mwith st.sidebar:[m
+             st.info("💡 Enter Google Gemini API key to enable LLM Judge evaluation (or set GOOGLE_API_KEY env var)")[m
+     else:[m
+         st.warning("⚠️ LLM Judge not available. Install: pip install google-genai")[m
+[32m+[m[41m    [m
+[32m+[m[32m    st.divider()[m
+[32m+[m[41m    [m
+[32m+[m[32m    # Memory Configuration (Mem0) - Only for Ira (Bot 1)[m
+[32m+[m[32m    st.subheader("🧠 Ira's Memory (Mem0)")[m
+[32m+[m[41m    [m
+[32m+[m[32m    # Initialize memory settings in session state[m
+[32m+[m[32m    if 'enable_memory' not in st.session_state:[m
+[32m+[m[32m        st.session_state.enable_memory = False[m
+[32m+[m[32m    if 'memory_user_id' not in st.session_state:[m
+[32m+[m[32m        st.session_state.memory_user_id = ""[m
+[32m+[m[41m    [m
+[32m+[m[32m    enable_memory = st.toggle([m
+[32m+[m[32m        "Enable Ira's Memory",[m
+[32m+[m[32m        value=st.session_state.enable_memory,[m
+[32m+[m[32m        help="Enable Mem0 memory for Ira to remember past conversations with users. Requires MEM0_API_KEY.",[m
+[32m+[m[32m        key="memory_toggle"[m
+[32m+[m[32m    )[m
+[32m+[m[32m    st.session_state.enable_memory = enable_memory[m
+[32m+[m[41m    [m
+[32m+[m[32m    if enable_memory:[m
+[32m+[m[32m        # Check if API key is in environment[m
+[32m+[m[32m        env_mem0_key = os.getenv("MEM0_API_KEY", "")[m
+[32m+[m[32m        if env_mem0_key:[m
+[32m+[m[32m            st.info("✅ MEM0_API_KEY found in environment")[m
+[32m+[m[32m        else:[m
+[32m+[m[32m            st.warning("⚠️ MEM0_API_KEY not found in environment. Set it to enable memory.")[m
+[32m+[m[32m            st.caption("Get your API key at: https://mem0.ai")[m
+[32m+[m[41m        [m
+[32m+[m[32m        memory_user_id = st.text_input([m
+[32m+[m[32m            "User ID (who Ira is talking to)",[m
+[32m+[m[32m            value=st.session_state.memory_user_id,[m
+[32m+[m[32m            placeholder="chetan_user",[m
+[32m+[m[32m            help="ID of the user Ira is talking to. Default: 'chetan_user'. Change to test different user memories.",[m
+[32m+[m[32m            key="memory_user_id_input"[m
+[32m+[m[32m        )[m
+[32m+[m[32m        st.session_state.memory_user_id = memory_user_id[m
+[32m+[m[41m        [m
+[32m+[m[32m        st.caption("💡 Ira will remember what users tell her across simulations.")[m
+[32m+[m[32m        st.caption("🔧 Use `memory_manager.py` to add/reset/view memories.")[m
+[32m+[m[32m    else:[m
+[32m+[m[32m        st.caption("💡 Enable memory for Ira to remember past conversations.")[m
+ [m
+ # Functions[m
+[31m-def start_simulation(bot1_prompt, bot2_prompt, max_time, output_dir, allow_interruptions=True):[m
+[32m+[m[32mdef start_simulation(bot1_prompt, bot2_prompt, max_time, output_dir, allow_interruptions=True, enable_memory=False, memory_user_id=None):[m
+     """Start the simulation with both bots in separate processes"""[m
+     try:[m
+         # Create output directory[m
+[36m@@ -353,6 +395,16 @@[m [mdef start_simulation(bot1_prompt, bot2_prompt, max_time, output_dir, allow_inter[m
+         else:[m
+             bot1_cmd.append("--no-interruptions")[m
+         [m
+[32m+[m[32m        # Add memory flags for Bot 1 (Ira) only[m
+[32m+[m[32m        # Ira is the assistant with memory - she remembers what users tell her[m
+[32m+[m[32m        # The user_id represents WHO Ira is talking to (default: "chetan_user")[m
+[32m+[m[32m        if enable_memory:[m
+[32m+[m[32m            bot1_cmd.append("--enable-memory")[m
+[32m+[m[32m            # Use custom user_id if provided, otherwise default to "chetan_user"[m
+[32m+[m[32m            actual_user_id = memory_user_id if memory_user_id else "chetan_user"[m
+[32m+[m[32m            bot1_cmd.extend(["--memory-user-id", actual_user_id])[m
+[32m+[m[32m            bot1_cmd.extend(["--memory-agent-id", "ira_agent"])[m
+[32m+[m[41m        [m
+         # Start Bot 2 process[m
+         bot2_cmd = [[m
+             sys.executable,[m
+[36m@@ -378,6 +430,9 @@[m [mdef start_simulation(bot1_prompt, bot2_prompt, max_time, output_dir, allow_inter[m
+         else:[m
+             bot2_cmd.append("--no-interruptions")[m
+         [m
+[32m+[m[32m        # Note: Bot 2 (Chetan) does NOT have memory enabled[m
+[32m+[m[32m        # Chetan simulates a user/customer - only Ira (the assistant) needs memory[m
+[32m+[m[41m        [m
+         # Start processes in separate terminals (Windows)[m
+         if os.name == 'nt':  # Windows[m
+             # Use subprocess.list2cmdline to properly quote arguments for Windows[m
+[36m@@ -437,6 +492,8 @@[m [mdef start_simulation(bot1_prompt, bot2_prompt, max_time, output_dir, allow_inter[m
+             st.info("⚡ Mode: Interruptions ENABLED - bots can speak over each other")[m
+         else:[m
+             st.success("🎙️ Mode: Turn-Taking ENABLED - bots will wait for each other")[m
+[32m+[m[32m        if enable_memory:[m
+[32m+[m[32m            st.info("🧠 Memory: ENABLED - bots will remember past conversations")[m
+         if goal_desc:[m
+             st.info(f"🎯 Goal: {goal_desc}")[m
+         [m
+[36m@@ -863,7 +920,15 @@[m [mwith col1:[m
+         # Start button[m
+         if st.button("▶️ Start Simulation", type="primary"):[m
+             # Use fixed prompt for Bot 1 and random persona prompt for Bot 2[m
+[31m-            start_simulation(BOT1_IRA_SYSTEM_PROMPT, st.session_state.bot2_prompt, max_time, output_dir, allow_interruptions)[m
+[32m+[m[32m            start_simulation([m
+[32m+[m[32m                BOT1_IRA_SYSTEM_PROMPT,[m[41m [m
+[32m+[m[32m                st.session_state.bot2_prompt,[m[41m [m
+[32m+[m[32m                max_time,[m[41m [m
+[32m+[m[32m                output_dir,[m[41m [m
+[32m+[m[32m                allow_interruptions,[m
+[32m+[m[32m                enable_memory=st.session_state.get('enable_memory', False),[m
+[32m+[m[32m                memory_user_id=st.session_state.get('memory_user_id', None) or None[m
+[32m+[m[32m            )[m
+             st.rerun()[m
+         [m
+         # Show unified transcript generation button if we have paths from a previous simulation[m
+[1mdiff --git a/simulation.py b/simulation.py[m
+[1mindex 53e19ab..58595ae 100644[m
+[1m--- a/simulation.py[m
+[1m+++ b/simulation.py[m
+[36m@@ -41,11 +41,19 @@[m [mfrom pipecat.services.google.llm import GoogleLLMService[m
+ from pipecat.services.deepgram.stt import DeepgramSTTService[m
+ from pipecat.services.deepgram.tts import DeepgramTTSService[m
+ [m
+[31m-# 2. Transport (Fixed Import Path)[m
+[32m+[m[32m# 2. Memory Service (Mem0)[m
+[32m+[m[32mtry:[m
+[32m+[m[32m    from pipecat.services.mem0 import Mem0MemoryService[m
+[32m+[m[32m    MEM0_AVAILABLE = True[m
+[32m+[m[32mexcept ImportError:[m
+[32m+[m[32m    MEM0_AVAILABLE = False[m
+[32m+[m[32m    Mem0MemoryService = None[m
+[32m+[m
+[32m+[m[32m# 3. Transport (Fixed Import Path)[m
+ from pipecat.transports.livekit.transport import LiveKitTransport, LiveKitParams[m
+ from pipecat.frames.frames import TextFrame, LLMMessagesFrame[m
+ [m
+[31m-# 3. VAD and Turn Analyzers[m
+[32m+[m[32m# 4. VAD and Turn Analyzers[m
+ from pipecat.audio.vad.silero import SileroVADAnalyzer[m
+ from pipecat.audio.vad.vad_analyzer import VADParams[m
+ from pipecat.audio.turn.smart_turn.local_smart_turn_v3 import LocalSmartTurnAnalyzerV3[m
+[36m@@ -64,10 +72,11 @@[m [mLIVEKIT_API_KEY="APIWRwxXv47vQBL"[m
+ LIVEKIT_API_SECRET="2ZaNw0e79ecj4hwjNHLoKMXyyzY4eLEq64b64GjTrxnA"[m
+ DEEPGRAM_API_KEY="47eaf4e876f2d9bbae745986c499a67765b9e348"[m
+ GOOGLE_API_KEY="AIzaSyAc4lOHy4qnRYO4_42W_fppmYRiAC0fmmo"[m
+[32m+[m[32mMEM0_API_KEY = os.getenv("MEM0_API_KEY", "")  # Set your Mem0 API key here or via environment variable[m
+ ROOM_NAME = "testingsims"[m
+ [m
+ [m
+[31m-async def main(bot_name: str, prompt_role: str, log_file: str = None, transcript_file: str = None, transcript_json_file: str = None, max_time: int = None, should_speak_first: bool = False, allow_interruptions: bool = True, tracing_log_file: str = None, goal_description: str = None, stop_signal_file: str = None, room_name: str = None):[m
+[32m+[m[32masync def main(bot_name: str, prompt_role: str, log_file: str = None, transcript_file: str = None, transcript_json_file: str = None, max_time: int = None, should_speak_first: bool = False, allow_interruptions: bool = True, tracing_log_file: str = None, goal_description: str = None, stop_signal_file: str = None, room_name: str = None, enable_memory: bool = False, memory_user_id: str = None, memory_agent_id: str = None):[m
+     # Setup file logging if log_file is provided[m
+     if log_file:[m
+         log_dir = Path(log_file).parent[m
+[36m@@ -185,6 +194,44 @@[m [masync def main(bot_name: str, prompt_role: str, log_file: str = None, transcript[m
+         model="gemini-2.5-flash-lite"[m
+     )[m
+     logger.info("✅ All services initialized")[m
+[32m+[m[41m    [m
+[32m+[m[32m    # 4b. Initialize Memory Service (Mem0) if enabled[m
+[32m+[m[32m    # Memory is configured so that:[m
+[32m+[m[32m    # - agent_id identifies the assistant (Ira) - "ira_agent"[m
+[32m+[m[32m    # - user_id identifies who the assistant is talking to - e.g., "chetan_user"[m
+[32m+[m[32m    # This allows Ira to remember what different users have told her[m
+[32m+[m[32m    memory_service = None[m
+[32m+[m[32m    if enable_memory and MEM0_AVAILABLE and MEM0_API_KEY:[m
+[32m+[m[32m        logger.info("🧠 Initializing Memory Service (Mem0)...")[m
+[32m+[m[41m        [m
+[32m+[m[32m        # Use provided IDs or generate defaults[m
+[32m+[m[32m        actual_user_id = memory_user_id or "chetan_user"[m
+[32m+[m[32m        actual_agent_id = memory_agent_id or "ira_agent"[m
+[32m+[m[41m        [m
+[32m+[m[32m        # Generate a unique run_id for this simulation session[m
+[32m+[m[32m        run_id = f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{bot_name}"[m
+[32m+[m[41m        [m
+[32m+[m[32m        memory_service = Mem0MemoryService([m
+[32m+[m[32m            api_key=MEM0_API_KEY,[m
+[32m+[m[32m            user_id=actual_user_id,[m
+[32m+[m[32m            agent_id=actual_agent_id,[m
+[32m+[m[32m            run_id=run_id,[m
+[32m+[m[32m            params={[m
+[32m+[m[32m                "search_limit": 10,          # Maximum memories to retrieve per query[m
+[32m+[m[32m                "search_threshold": 0.1,     # Relevance threshold (0.0 to 1.0)[m
+[32m+[m[32m                "system_prompt": "Here are relevant memories from past conversations with this user:",[m
+[32m+[m[32m                "add_as_system_message": True,[m
+[32m+[m[32m                "position": 1,               # Position in context to insert memories[m
+[32m+[m[32m            }[m
+[32m+[m[32m        )[m
+[32m+[m[32m        logger.info(f"✅ Memory service initialized")[m
+[32m+[m[32m        logger.info(f"   Agent (assistant): {actual_agent_id}")[m
+[32m+[m[32m        logger.info(f"   User (talking to): {actual_user_id}")[m
+[32m+[m[32m        logger.info(f"   Session: {run_id}")[m
+[32m+[m[32m    elif enable_memory and not MEM0_AVAILABLE:[m
+[32m+[m[32m        logger.warning("⚠️ Memory requested but Mem0 not available. Install with: pip install 'pipecat-ai[mem0]'")[m
+[32m+[m[32m    elif enable_memory and not MEM0_API_KEY:[m
+[32m+[m[32m        logger.warning("⚠️ Memory requested but MEM0_API_KEY not set. Set it in environment or simulation.py")[m
+ [m
+     # 5. Context & Prompts[m
+     logger.info("📋 Setting up conversation context...")[m
+[36m@@ -476,7 +523,9 @@[m [masync def main(bot_name: str, prompt_role: str, log_file: str = None, transcript[m
+     turn_tracker = TurnTracker(audio_output_tracker)[m
+     [m
+     # 8. Build Pipeline[m
+[31m-    pipeline = Pipeline([[m
+[32m+[m[32m    # 8. Build Pipeline[m
+[32m+[m[32m    # Build pipeline processors list dynamically based on memory availability[m
+[32m+[m[32m    pipeline_processors = [[m
+         transport.input(),           # Listen for audio from room[m
+         DebugProcessor("after_input"),[m
+         turn_tracker,                # Track turn boundaries[m
+[36m@@ -485,6 +534,16 @@[m [masync def main(bot_name: str, prompt_role: str, log_file: str = None, transcript[m
+         input_tracker,               # Track incoming transcriptions[m
+         context_aggregator.user(),   # Add user message to context[m
+         DebugProcessor("after_user_ctx"),[m
+[32m+[m[32m    ][m
+[32m+[m[41m    [m
+[32m+[m[32m    # Add memory service if available (between user context and LLM)[m
+[32m+[m[32m    if memory_service:[m
+[32m+[m[32m        pipeline_processors.append(memory_service)[m
+[32m+[m[32m        pipeline_processors.append(DebugProcessor("after_memory"))[m
+[32m+[m[32m        logger.info("🧠 Memory service added to pipeline")[m
+[32m+[m[41m    [m
+[32m+[m[32m    # Continue with rest of pipeline[m
+[32m+[m[32m    pipeline_processors.extend([[m
+         llm,                         # Generate response[m
+         DebugProcessor("after_llm"),[m
+         output_tracker,              # Track outgoing responses[m
+[36m@@ -494,6 +553,8 @@[m [masync def main(bot_name: str, prompt_role: str, log_file: str = None, transcript[m
+         transport.output(),          # Send audio to room[m
+         context_aggregator.assistant()  # Add assistant message to context[m
+     ])[m
+[32m+[m[41m    [m
+[32m+[m[32m    pipeline = Pipeline(pipeline_processors)[m
+     logger.info("✅ Pipeline built successfully")[m
+     [m
+     # 9. Run with time limit[m
+[36m@@ -699,6 +760,15 @@[m [mif __name__ == "__main__":[m
+                         help="Path to file that signals stop when created")[m
+     parser.add_argument("--room-name", type=str, default=None,[m
+                         help="LiveKit room name (default: testingsims)")[m
+[32m+[m[41m    [m
+[32m+[m[32m    # Memory configuration[m
+[32m+[m[32m    parser.add_argument("--enable-memory", action="store_true", default=False,[m
+[32m+[m[32m                        help="Enable Mem0 memory service for persistent conversation memory")[m
+[32m+[m[32m    parser.add_argument("--memory-user-id", type=str, default=None,[m
+[32m+[m[32m                        help="User ID for memory service (default: simulation_user_{bot_name})")[m
+[32m+[m[32m    parser.add_argument("--memory-agent-id", type=str, default=None,[m
+[32m+[m[32m                        help="Agent ID for memory service (default: agent_{bot_name})")[m
+[32m+[m[41m    [m
+     # Mutually exclusive group for interruption handling[m
+     interruption_group = parser.add_mutually_exclusive_group()[m
+     interruption_group.add_argument("--allow-interruptions", action="store_true", dest="allow_interruptions", [m
+[36m@@ -720,5 +790,8 @@[m [mif __name__ == "__main__":[m
+         tracing_log_file=args.tracing_log_file,[m
+         goal_description=args.goal_description,[m
+         stop_signal_file=args.stop_signal_file,[m
+[31m-        room_name=args.room_name[m
+[32m+[m[32m        room_name=args.room_name,[m
+[32m+[m[32m        enable_memory=args.enable_memory,[m
+[32m+[m[32m        memory_user_id=args.memory_user_id,[m
+[32m+[m[32m        memory_agent_id=args.memory_agent_id[m
+     ))[m
+\ No newline at end of file[m

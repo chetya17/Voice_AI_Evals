@@ -1,0 +1,21 @@
+# Bot Simulation Framework Requirements
+# =====================================
+
+# Core Framework
+pipecat-ai[google,deepgram,livekit,silero]>=0.0.98
+
+# LiveKit SDK
+livekit>=0.12.0
+livekit-api>=0.6.0
+
+# Web UI
+streamlit>=1.32.0
+
+# LLM Judge
+google-genai>=0.4.0
+
+# Environment management
+python-dotenv>=1.0.0
+
+# Logging
+loguru>=0.7.0
