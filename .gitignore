@@ -59,3 +59,5 @@ build/
 *.egg-info/
 *.egg
 
+.deepeval/
+__pycache/
